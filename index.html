@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="canonical" href="https://nteste05.github.io/poa/" />
+    <link rel="icon" type="image/jpeg" href="poa-favicon.jpeg" sizes="32x32">
+    <link rel="apple-touch-icon" sizes="180x180" href="poa-favicon.jpeg">
+    <link rel="manifest" href="manifest.json">
+    
+    <title>PoA: Aplikasi Alat Potong Audio Online</title>
+    <meta name="description" content="Potong audio instan dengan PoA! Proses 100% di browser tanpa upload ke server. Aman, gratis, & cepat. Konversi hasil potong ke MP3 atau WebM sekarang.">
+    <meta name="keywords" content="Potong audio online, MP3 Cutter, Edit audio browser, Audio trimmer gratis, Konversi audio WebM">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nteste05.github.io/poa">
+    <meta property="og:title" content="PoA: Aplikasi Alat Potong Audio Online">
+    <meta property="og:description" content="Potong audio instan dengan PoA! Proses 100% di browser tanpa upload ke server. Aman, gratis, & cepat. Konversi hasil potong ke MP3 atau WebM sekarang.">
+    <meta property="og:image" content="https://raw.githubusercontent.com/nteste05/poa/refs/heads/main/poa-thumb.jpeg">
+    
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://nteste05.github.io/poa">
+    <meta property="twitter:title" content="PoA: Aplikasi Alat Potong Audio Online">
+    <meta property="twitter:description" content="Potong audio instan dengan PoA! Proses 100% di browser tanpa upload ke server. Aman, gratis, & cepat. Konversi hasil potong ke MP3 atau WebM sekarang.">
+    <meta property="twitter:image" content="https://raw.githubusercontent.com/nteste05/poa/refs/heads/main/poa-thumb.jpeg">
+    
+    <script src="lame.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f43f5e;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
+        
+        * {box-sizing: border-box;}
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0 15px;
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            background: var(--card);
+            max-width: 600px;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+        }
+
+        h1 { font-size: 1.5rem; text-align: center; margin-bottom: 30px; color: #818cf8; }
+
+        .drop-zone {
+            border: 2px dashed #475569;
+            border-radius: 1rem;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .drop-zone:hover { border-color: var(--primary); background: #334155; }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; text-transform: uppercase; }
+
+        input[type="number"] {
+            width: 40%;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            padding: 0.7rem;
+            border-radius: 0.5rem;
+            outline: none;
+        }
+
+        .visualizer-container {
+            background: #0f172a;
+            height: 60px;
+            border-radius: 0.5rem;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #progressLine {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--accent);
+            display: none;
+        }
+
+        .button-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+
+        button {
+            width: 100%;
+            padding: 20px 10px;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-preview { background: #334155; color: white; }
+        .btn-preview:hover { background: #475569; }
+        .btn-cut { background: var(--primary); color: white; }
+        .btn-cut:hover { opacity: 0.9; }
+        .btn-download { background: var(--secondary); color: white; display: none; text-decoration: none; padding: 10px}
+
+        #status { text-align: center; margin-top: 1rem; font-size: 0.85rem; color: #94a3b8; }
+
+        @media screen and (min-width: 769px) {
+            body {width: 100%; align-items: center}
+            .app-container { padding: 1.2rem; }
+        }
+        
+        .navbar {
+            padding: 20px 0;
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: #bbb;
+            font-size: 24px;
+            cursor: pointer;
+            margin: 0 20px 0 0;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin:0;
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 2000;
+            top: 0;
+            left: 0;
+            background-color: var(--bg);
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 10px;
+        }
+
+        .sidebar a {
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            color: #ccc;
+            display: block;
+            transition: 0.2s;
+            border-bottom: 1px solid #bbb;
+        }
+
+        .sidebar a:hover {
+            color: #818cf8;
+            background-color: var(--card);
+        }
+
+        .sidebar .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 36px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .overlaynav {
+            display: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1500;
+        }
+        
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+        footer {
+            font-size: 12px;
+            margin-top: 20px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="mySidebar" class="sidebar">
+        <span class="close-btn" onclick="closeNav()">&times;</span>
+        <a href="https://nteste05.github.io/gemii/" onclick="closeNav()">👽 Lainnya</a>
+    </div>
+    <div id="overlaynav" class="overlaynav" onclick="closeNav()"></div>
+    <nav class="navbar">
+        <div class="menu-btn" onclick="openNav()">&#9776;</div>
+        <header><h1>PoA: Alat Potong Audio ✂️</h1></header>
+    </nav>
+    <div class="app-container">
+        <p>*) File tidak dikirim ke server. Semua proses terjadi di browser Anda.</p>
+        <label class="drop-zone" id="dropZone">
+            <span id="fileName">Pilih file MP3 / WAV / WebM</span>
+            <input type="file" id="audioInput" accept="audio/*, .webm" hidden>
+        </label>
+        <div class="visualizer-container" id="viz">
+            <div id="progressLine"></div>
+            <span id="vizText" style="color:#475569; font-size: 0.8rem;">Preview Visualizer</span>
+        </div>
+        <div class="controls">
+            <div class="input-group">
+                <label>Mulai (detik)</label>
+                <input type="number" id="startTime" value="0" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Durasi (detik)</label>
+                <input type="number" id="duration" value="5" step="0.1">
+            </div>
+        </div>
+        <div class="button-stack">
+            <button class="btn-preview" onclick="togglePreview()" id="playBtn">▶️ Putar Preview</button>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-cut" onclick="processCut('webm')" style="flex:1">✂️ Potong ke (WebM)</button>
+                <button class="btn-cut" onclick="processCut('mp3')" style="flex:1; background: #8b5cf6;">✂️ Potong ke (MP3)</button>
+            </div>
+            <a id="downloadLink" class="btn-download">💾 Download Hasil</a>
+        </div>
+        <div id="status">Siap digunakan</div>
+    </div>
+    
+<script>
+    let context = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuffer = null;
+    let sourceNode = null;
+    let isPlaying = false;
+
+    const audioInput = document.getElementById('audioInput');
+    const status = document.getElementById('status');
+    const playBtn = document.getElementById('playBtn');
+    const progressLine = document.getElementById('progressLine');
+
+    audioInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        document.getElementById('fileName').innerText = file.name;
+        status.innerText = "Mendekode audio... mohon tunggu";
+        const arrayBuffer = await file.arrayBuffer();
+        audioBuffer = await context.decodeAudioData(arrayBuffer);
+        document.getElementById('vizText').style.display = 'none';
+        status.innerText = `Siap dipotong!`;
+    });
+
+    function togglePreview() {
+        if (!audioBuffer) return alert("Pilih file dulu!");
+        if (isPlaying) {
+            stopPreview();
+        } else {
+            const start = parseFloat(document.getElementById('startTime').value);
+            const dur = parseFloat(document.getElementById('duration').value);
+            if (start + dur > audioBuffer.duration) return alert("Durasi melebihi batas file!");
+            sourceNode = context.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            sourceNode.connect(context.destination);
+            sourceNode.start(0, start, dur);
+            isPlaying = true;
+            playBtn.innerText = "⏹️ Hentikan";
+            progressLine.style.display = 'block';
+            progressLine.style.transition = `none`;
+            progressLine.style.left = '0%';
+            setTimeout(() => {
+                progressLine.style.transition = `left ${dur}s linear`;
+                progressLine.style.left = '100%';
+            }, 50);
+            sourceNode.onended = () => stopPreview();
+        }
+    }
+
+    function stopPreview() {
+        if (sourceNode) { sourceNode.stop(); sourceNode = null; }
+        isPlaying = false;
+        playBtn.innerText = "▶️ Putar Preview";
+        progressLine.style.display = 'none';
+    }
+
+               async function processCut(type = 'webm') {
+        if (!audioBuffer) return alert("Pilih file audio terlebih dahulu!");
+        stopPreview();
+
+        const start = parseFloat(document.getElementById('startTime').value);
+        const dur = parseFloat(document.getElementById('duration').value);
+        const sampleRate = audioBuffer.sampleRate;
+        
+        if (start + dur > audioBuffer.duration) {
+            return alert("Durasi potongan melebihi panjang lagu!");
+        }
+
+        status.innerText = `Memproses ke ${type.toUpperCase()}... mohon tunggu`;
+
+        // DEKLARASI ASLI ANDA (Tetap dipertahankan)
+        const frameCount = Math.floor(dur * sampleRate);
+        const newBuffer = context.createBuffer(audioBuffer.numberOfChannels, frameCount, sampleRate);
+
+        for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+            const data = audioBuffer.getChannelData(i);
+            const newData = newBuffer.getChannelData(i);
+            const offset = Math.floor(start * sampleRate);
+            for (let j = 0; j < frameCount; j++) {
+                newData[j] = data[j + offset] || 0;
+            }
+        }
+
+        if (type === 'webm') {
+            // --- LOGIKA WEBM (Metode Recorder) ---
+            const dest = context.createMediaStreamDestination();
+            const bufferSource = context.createBufferSource();
+            bufferSource.buffer = newBuffer;
+            bufferSource.connect(dest);
+
+            const recorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+            const chunks = [];
+
+            recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+            recorder.onstop = () => {
+                const webmBlob = new Blob(chunks, { type: 'audio/webm' });
+                showDownloadLink(webmBlob, 'webm');
+            };
+
+            recorder.start();
+            bufferSource.start();
+            
+            setTimeout(() => {
+                recorder.stop();
+                bufferSource.stop();
+            }, (dur * 1000) + 200);
+
+        } else if (type === 'mp3') {
+            // --- LOGIKA MP3 (Menggunakan lamejs Lokal) ---
+            try {
+                // Inisialisasi Encoder
+                const channels = newBuffer.numberOfChannels;
+                const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
+                const mp3Data = [];
+                
+                status.innerText = `Proses sedikit lama..mohon tunggu.`;
+
+                // Ambil data channel
+                const left = newBuffer.getChannelData(0);
+                const right = channels > 1 ? newBuffer.getChannelData(1) : left;
+
+                // Konversi Float32 ke Int16 (WAJIB agar tidak loading terus)
+                const toInt16 = (f32) => {
+                    let i = f32.length, res = new Int16Array(i);
+                    while (i--) {
+                        let s = Math.max(-1, Math.min(1, f32[i]));
+                        res[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+                    return res;
+                };
+
+                const lInt = toInt16(left);
+                const rInt = toInt16(right);
+                
+                // Proses per blok 1152 sampel
+                const blockSize = 1152;
+                for (let i = 0; i < lInt.length; i += blockSize) {
+                    const lChunk = lInt.subarray(i, i + blockSize);
+                    const rChunk = rInt.subarray(i, i + blockSize);
+                    const mp3buf = mp3encoder.encodeBuffer(lChunk, rChunk);
+                    if (mp3buf.length > 0) {
+                        mp3Data.push(new Int8Array(mp3buf));
+                    }
+                }
+
+                // Flush sisa buffer
+                const last = mp3encoder.flush();
+                if (last.length > 0) {
+                    mp3Data.push(new Int8Array(last));
+                }
+
+                const mp3Blob = new Blob(mp3Data, { type: 'audio/mp3' });
+                showDownloadLink(mp3Blob, 'mp3');
+
+            } catch (err) {
+                console.error("Error Encoding MP3:", err);
+                status.innerText = "Error: Pastikan file lame.min.js sudah terload.";
+            }
+        }
+    }
+
+    function showDownloadLink(blob, ext) {
+        const url = URL.createObjectURL(blob);
+        const dl = document.getElementById('downloadLink');
+        dl.href = url;
+        dl.download = `PoA_nteste05_${Date.now()}.${ext}`;
+        dl.style.display = "flex";
+        dl.innerText = `💾 Download Hasil (.${ext})`;
+        status.innerText = `Selesai! Format ${ext.toUpperCase()} siap.`;
+    }
+    
+    const sidebar = document.getElementById("mySidebar");
+        const overlaynav = document.getElementById("overlaynav");
+        
+        function openNav() {
+            sidebar.style.width = "280px";
+            overlaynav.style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+        
+        function closeNav() {
+            sidebar.style.width = "0";
+            overlaynav.style.display = "none";
+            // Mengembalikan scroll body
+            document.body.style.overflow = "auto";
+        }
+</script>
+<footer>
+    <p class="visually-hidden">PoA: Alat Potong Audio Tercepat, Aman, dan Langsung di Browser Anda<br><br>Mencari cara praktis untuk memotong lagu atau rekaman suara tanpa harus menginstal software berat? Kenalkan PoA, <strong>aplikasi pemotong audio berbasis web</strong> yang dirancang untuk memberikan kemudahan, kecepatan, dan keamanan maksimal bagi penggunanya. Apakah Anda ingin membuat ringtone kustom, memotong bagian podcast yang tidak perlu, atau sekadar merapikan hasil rekaman, PoA adalah solusi "all-in-one" yang bisa Anda akses kapan saja.</p>
+    <p class="visually-hidden">Mengapa Memilih PoA?<br>PoA tampil berbeda dengan mengedepankan teknologi modern yang berfokus pada kenyamanan pengguna dan keamanan data. Berikut adalah keunggulan utama yang menjadikan PoA sebagai pilihan terbaik Anda:<br>1. Proses 100% di Sisi Klien (Local Processing)<br>Keamanan data adalah prioritas kami. Berbeda dengan platform lain yang mengharuskan Anda mengunggah file ke server mereka, PoA bekerja sepenuhnya di dalam browser Anda. Artinya, file audio Anda tidak pernah meninggalkan perangkat Anda. Proses pemotongan dan konversi dilakukan oleh sistem komputer Anda sendiri melalui browser, sehingga risiko kebocoran data atau privasi sangat minim.<br>2. Konversi Instan ke Format MP3 dan WebM<br>Kebutuhan format audio bisa berbeda-beda. PoA tidak hanya berfungsi sebagai alat potong, tetapi juga sebagai konverter yang handal. Setelah Anda menentukan bagian audio yang ingin diambil, Anda bisa langsung mengekspornya ke dalam format:<br>MP3: Format universal yang kompatibel dengan hampir semua perangkat dan pemutar musik.<br>WebM: Format modern yang sangat efisien, cocok untuk penggunaan di web, aplikasi Android, atau integrasi video masa kini.<br>3. Ringan dan Tanpa Instalasi<br>Lupakan proses instalasi yang rumit atau kekhawatiran akan malware dari software bajakan. PoA adalah aplikasi berbasis web yang bisa dijalankan melalui Chrome, Firefox, Safari, maupun Edge. Cukup buka situsnya, masukkan file Anda, dan mulai berkreasi.</p>
+    <p class="visually-hidden">Fitur Unggulan PoA<br>Antarmuka Visual yang Intuitif: Dilengkapi dengan tampilan gelombang suara (waveform), Anda bisa menentukan titik potong dengan presisi tinggi hingga hitungan milidetik.<br>Gratis Tanpa Batas: Gunakan PoA sesuka hati tanpa perlu berlangganan atau membayar biaya tambahan. Tidak ada batasan jumlah file yang ingin Anda proses setiap harinya.<br>Kecepatan Luar Biasa: Karena tidak ada proses upload dan download dari server saat pengeditan, hasil potongan bisa langsung diunduh dalam hitungan detik setelah Anda menekan tombol simpan.</p>
+    <p class="visually-hidden">Cara Menggunakan PoA dalam 3 Langkah Mudah<br>Menggunakan PoA sangatlah sederhana, bahkan bagi Anda yang tidak memiliki keahlian teknis dalam editing audio:<br>Impor Audio: Tarik dan lepas (drag & drop) file audio Anda ke area kerja PoA.<br>Tentukan Nilai: Isi mulai dan durasi (dalam satuan detik) pada input untuk menentukan bagian yang ingin Anda simpan.<br>Simpan & Ekspor: Pilih format tujuan (MP3 atau WebM), pemotongan akan diproses. File hasil potongan akan tersedia dan siap di unduh.</p>
+    <p class="visually-hidden">PoA adalah jawaban bagi Anda yang membutuhkan <strong>alat potong audio</strong> yang cepat, gratis, dan sangat menjaga privasi. Dengan teknologi pemrosesan lokal di browser, Anda tidak perlu lagi khawatir tentang kuota internet yang boros untuk mengunggah file besar atau privasi rekaman sensitif Anda.<br>Segera coba <strong>PoA</strong> sekarang dan rasakan kemudahan mengedit audio langsung dari browser Anda. Potong, konversi, dan simpan audio favorit Anda dengan standar keamanan tertinggi!</p>
+    <p>&copy; 2026 <a style="color: inherit; text-decoration: none;" href="https://nteste05.github.io/poa/">PoA: Aplikasi Alat Potong Audio ke webm mp3.</a> All Rights Reserved.</p>
+    </footer>
+</body>
+</html>
