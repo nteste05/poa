@@ -379,6 +379,7 @@
         } else if (type === 'mp3') {
             // --- LOGIKA MP3 (Menggunakan lamejs Lokal) ---
             status.innerText = `Proses sedikit lama..mohon tunggu.`;
+            setTimeout(() => {
             try {
                 // Inisialisasi Encoder
                 const channels = newBuffer.numberOfChannels;
@@ -426,6 +427,7 @@
                 console.error("Error Encoding MP3:", err);
                 status.innerText = "Error: Pastikan file lame.min.js sudah terload.";
             }
+    }, 1000);
         }
     }
 
