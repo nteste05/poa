@@ -325,7 +325,7 @@
         progressLine.style.display = 'none';
     }
 
-               async function processCut(type = 'webm') {
+        async function processCut(type = 'webm') {
         if (!audioBuffer) return alert("Pilih file audio terlebih dahulu!");
         stopPreview();
 
@@ -378,13 +378,12 @@
 
         } else if (type === 'mp3') {
             // --- LOGIKA MP3 (Menggunakan lamejs Lokal) ---
+            status.innerText = `Proses sedikit lama..mohon tunggu.`;
             try {
                 // Inisialisasi Encoder
                 const channels = newBuffer.numberOfChannels;
                 const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
                 const mp3Data = [];
-                
-                status.innerText = `Proses sedikit lama..mohon tunggu.`;
 
                 // Ambil data channel
                 const left = newBuffer.getChannelData(0);
